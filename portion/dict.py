@@ -260,11 +260,14 @@ class IntervalDict(MutableMapping):
 
     def __getitem__(self, key):
         if isinstance(key, Interval):
+            # No need to consider intervals with left boundary > key.upper
+            max_key = (key.upper, False)
+
             items = []
-            for i, v in self._storage.items():
+            for i in self._storage.irange_key(None, max_key, (False, False)):
                 intersection = key & i
                 if not intersection.empty:
-                    items.append((intersection, v))
+                    items.append((intersection, self._storage[i]))
             return IntervalDict._from_items(items)
         else:
             for i, v in self._storage.items():
